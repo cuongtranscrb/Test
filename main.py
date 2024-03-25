@@ -1,34 +1,52 @@
+import os
+import sys
+
 def create_chrome_profile():
     """
     This function creates a new profile in the Chrome browser.
 
     Returns:
-    str: The name of the newly created profile
+    str: The name of the newly created profile or None if an error occurred.
     """
     try:
         # Import the necessary libraries
-        from selenium import webdriver
+        import selenium
         from selenium.webdriver.chrome.options import Options
 
-        # Set the path to the Chrome driver executableT
-        chrome_driver_path = 'chromedriver.exe'
+        # Check if the Chrome browser is installed
+        if selenium.webdriver.common.is_chromium_present():
+            # Get the path to the Chrome driver executable
+            chrome_driver_path = selenium.webdriver.chrome.service.Service().path
 
-        # Set the options for creating a new profile
-        options = Options()
-        options.add_argument("--user-data-dir=/path/to/new_profile")
+            # Set the path to the new user data directory
+            new_profile_path = os.path.join(os.getenv('TEMP'), 'new_profile')
 
-        # Create a new Chrome driver instance with the specified options
-        driver = webdriver.Chrome(executable_path=chrome_driver_path, chrome_options=options)
+            # Create the new user data directory
+            if not os.path.exists(new_profile_path):
+                os.makedirs(new_profile_path)
 
-        # Get the name of the newly created profile
-        profile_name = driver.capabilities['chrome']['userDataDir']
+            # Set the options for creating a new profile
+            options = Options()
+            options.add_argument("--user-data-dir=%s" % new_profile_path)
 
-        # Close the Chrome driver
-        driver.quit()
+            # Create a new Chrome driver instance with the specified options
+            driver = selenium.webdriver.Chrome(executable_path=chrome_driver_path, chrome_options=options)
 
-        # Return the name of the newly created profile
-        return profile_name
+            # Get the name of the newly created profile
+            profile_name = driver.capabilities['chrome']['userDataDir']
+
+            # Close the Chrome driver
+            driver.quit()
+
+            # Return the name of the newly created profile
+            return profile_name
+        else:
+            # Log an error message if the Chrome browser is not installed
+            print('Error: The Chrome browser is not installed on this machine.')
+
     except Exception as e:
         # Log the error
-        print(f"Error: {e}")
-        return None
+        print(f'Error: {e}')
+
+    # Return None if an error occurred
+    return None
