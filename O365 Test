@@ -1,0 +1,52 @@
+import os
+import sys
+
+from o365.account import Account
+from o365.middleware import AuthMiddleware
+from o365.utils import FileSystemTokenBackend
+
+# Set the path to the client secret file
+client_secret_path = 'client_secret.json'
+
+# Set the path to the token file
+token_path = 'token.json'
+
+# Set the path to the credentials file
+credentials_path = 'credentials.json'
+
+# Set the path to the log file
+log_path = 'o365.log'
+
+# Create a token backend object
+token_backend = FileSystemTokenBackend(token_path, client_secret_path)
+
+# Create a middleware object
+middleware = AuthMiddleware(client_secret_path, token_backend=token_backend, scopes=['basic', 'contacts_all', 'contacts_read', 'mailbox_all', 'mailbox_read'])
+
+# Create a new account object
+account = Account(credentials_path, auth_provider=middleware)
+
+# Log in to the Office 365 API
+if account.authenticate(scopes=middleware.scopes):
+    print('Authenticated to the Office 365 API.')
+else:
+    print('Failed to authenticate to the Office 365 API.')
+    sys.exit(1)
+
+# Get the mailbox object
+mailbox = account.mailbox()
+
+# Get the inbox folder
+inbox = mailbox.inbox_folder()
+
+# Get the list of messages in the inbox
+messages = inbox.get_messages()
+
+# Print the subject and sender of each message
+for message in messages:
+    print(f'Subject: {message.subject}')
+    print(f'Sender: {message.sender}')
+    print()
+
+# Log out of the Office 365 API
+account.logout()
